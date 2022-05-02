@@ -22,18 +22,18 @@ pub struct MultiRwLockInner {
 }
 
 impl MultiRwLockInner {
-    pub fn new(free: VecDeque<ResourceIndex>, max_readers: usize, max_draining: usize) -> Self {
+    pub fn new(max_readers: usize, max_draining: usize) -> Self {
         Self {
-            free,
+            free: VecDeque::new(),
             reader_handles: ReaderHandles::new(max_readers, max_draining),
             writer_handles: WriterHandles::new(),
             queue: CallQueue::new(),
         }
     }
 
-    // pub fn add_resource(&mut self, i: ResourceIndex) {
-    //     self.handle_newly_freed_resource(i)
-    // }
+    pub fn push_resource(&mut self, i: ResourceIndex) {
+        self.handle_newly_freed_resource(i)
+    }
 
     pub fn read(&mut self, handle: CallHandle) -> Result<ResourceIndex, Receiver<ResourceIndex>> {
         let free = self.free.pop_front();
@@ -83,13 +83,7 @@ impl MultiRwLockInner {
             Some(res_idx) => res_idx,
             None => {
                 if !self.reader_handles.full() {
-                    loop {
-                        let (h, s) = if let Some(x) = self.queue.pop_front_read() {
-                            x
-                        } else {
-                            break;
-                        };
-
+                    while let Some((h, s)) = self.queue.pop_front_read() {
                         let res_idx = self.reader_handles.add_reader(h).unwrap();
                         if s.send(res_idx).is_ok() {
                             break;

@@ -48,7 +48,7 @@ impl CallQueue {
 
     fn top(&mut self) -> Option<&Queued> {
         loop {
-            if let Some(f) = self.queue.front().map(Option::as_ref).flatten() {
+            if let Some(f) = self.queue.front().and_then(Option::as_ref) {
                 let f: NonNull<Queued> = f.into();
                 // grumble grumble polonius
                 let f = unsafe { f.as_ref() };
@@ -96,7 +96,7 @@ impl CallQueue {
     /// try to drain, returning true for drain queued, and false for reader at the top of queue or queue empty
     pub fn drain(&mut self) {
         let front = loop {
-            if let Some(f) = self.queue.front().map(Option::as_ref).flatten() {
+            if let Some(f) = self.queue.front().and_then(Option::as_ref) {
                 break f;
             }
             if self.pop_front_queue().is_none() {

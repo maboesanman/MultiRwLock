@@ -184,20 +184,15 @@ impl ResourceHeap {
         }
 
         let mut c = index;
-        loop {
-            match Self::parent(c) {
-                Some(p) => {
-                    let c_count = self.heap.get(c).unwrap().0;
-                    let p_count = self.heap.get(p).unwrap().0;
-                    if c_count < p_count {
-                        self.swap(c, p);
-                        c = p;
-                        continue;
-                    } else {
-                        break;
-                    }
-                }
-                None => break,
+        while let Some(p) = Self::parent(c) {
+            let c_count = self.heap.get(c).unwrap().0;
+            let p_count = self.heap.get(p).unwrap().0;
+            if c_count < p_count {
+                self.swap(c, p);
+                c = p;
+                continue;
+            } else {
+                break;
             }
         }
     }
