@@ -118,6 +118,11 @@ impl MultiRwLockInner {
         self.handle_newly_freed_resource(res_idx);
     }
 
+    pub fn delete_writing_resource(&mut self, handle: CallHandle) -> Result<(), ()> {
+        self.writer_handles.remove_writer(handle).ok_or(());
+        Ok(())
+    }
+
     pub fn set_max_readers(&mut self, max: usize) {
         self.reader_handles.set_max_readers(max);
     }
